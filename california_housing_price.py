@@ -3,6 +3,7 @@ import tarfile
 import urllib.request
 import numpy as np
 import pandas as pd
+from pandas.plotting import scatter_matrix
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
@@ -66,7 +67,8 @@ class ReadData(CreateDIR):
         return pd.read_csv(csv_path)
     
     # read data for pandas data_frame
-    def pandas_method(self, df):
+    def pandas_method(self):
+        df = self.load_data()
         print('First 5 rows: \n', df.head())
         print('Last 5 rows: \n', df.tail())
         print('No. of Columns: \n', df.columns)
@@ -79,7 +81,8 @@ class ReadData(CreateDIR):
     # visulazie data using hist() function from matplotlib
     # and save the plot as .png by calling the user created save_fig() function
     # the save_fig() calls the plt.savefig() function of matplotlib
-    def matplotlib_method(self, df):
+    def matplotlib_method(self):
+        df = self.load_data()
         df.hist(bins=50, figsize=(16,10))
         SaveDataAndImage.save_fig(self, "attribute_histogram_plots")
         plt.show()
@@ -102,10 +105,10 @@ class AddCompare(ReadData):
         print(df['income_cat'].head())
         # df['income_cat'].hist()
         # plt.show()
-        self.df = df
+        return df
 
     def split_data(self):
-        df = self.df
+        df = self.add_column()
 
         # Split data into train and test set using train_test_split()
         train_set, test_set = train_test_split(df, test_size=0.2, random_state=42)
@@ -125,7 +128,7 @@ class AddCompare(ReadData):
     
     # Compare train_test_split() & StratifiedShuffleSplit()
     def compare_proprtions(self):
-        df = self.df
+        df = self.add_column()
         strat_test_set = self.strat_test_set
         test_set = self.test_set
         # Create a dataframe and store the data in compare_props
@@ -143,26 +146,40 @@ class AddCompare(ReadData):
         compare_props["Strat. %error"] = 100 * compare_props["Stratified"] / compare_props["Overall"] - 100
         print(compare_props)
 
-if __name__ == '__main__':
-    print('1 - Fetch & Extract Data \n2 - Read Data & Visualize \n3 - Visualize In Depth')
-    user_input = int(input('Enter number :'))
-
-    DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml/master/"
-    HOUSING_URL = DOWNLOAD_ROOT + "datasets/housing/housing.tgz"
-
-    if user_input == 1:
-        data = SaveDataAndImage(folder='housing', url=HOUSING_URL)
-        data.fetch_and_extract_data()
-    elif user_input == 2: 
-        # create object of ReadData()
-        data = ReadData(folder='housing')
-        df = data.load_data()
-        data.pandas_method(df)
-        data.matplotlib_method(df)
-    elif user_input == 3:
-        # create object of AddCompare()
-        vd = AddCompare(folder='housing')
-        vd.add_column()
-        vd.split_data()
-        vd.compare_proprtions()
-
+# this class discovers and visulize correlation between columns 
+class DiscoverAndVisulize(AddCompare):
+    def __init__(self, folder):
+        AddCompare.__init__(self, folder)
+    
+    # Remove the income_cat column
+    def remove_column(self):
+        self.split_data()
+        strat_train_set = self.strat_train_set
+        strat_test_set = self.strat_test_set
+        for set_ in (strat_train_set, strat_test_set):
+            set_.drop("income_cat", axis=1, inplace=True)
+        return strat_train_set, strat_test_set
+    
+    # Plot a Scatterplot and save it as 'housing_prices_scatterplot.png'
+    def visulaize_data(self):
+        strat_train_set, strat_test_set = self.remove_column()
+        housing = strat_train_set.copy()
+        housing.plot(kind="scatter", x="longitude", y="latitude", alpha=0.4,
+            s=housing["population"]/100, label="population", figsize=(10,7),
+            c="median_house_value", cmap=plt.get_cmap("jet"), colorbar=True,
+            sharex=False)
+        plt.legend()
+        SaveDataAndImage.save_fig(self, "housing_prices_scatterplot")
+        plt.show()
+    
+    # display the correlation using pandas
+    def correlation(self):
+        strat_train_set, strat_test_set = self.remove_column()
+        housing = strat_train_set.copy()
+        corr_matrix = housing.corr() # use corr() for creating a metrix of correlation for all columns
+        print(corr_matrix["median_house_value"].sort_values(ascending=False))
+        attributes = ["median_house_value", "median_income", "total_rooms",
+                    "housing_median_age"]
+        scatter_matrix(housing[attributes], figsize=(10, 7)) # visulize correlation using scatter_matrix
+        SaveDataAndImage.save_fig(self,"scatter_matrix_plot") # call SaveDataAndImage.save_fig() method to save as img.
+        plt.show()
