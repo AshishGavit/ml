@@ -24,9 +24,10 @@ if __name__ == '__main__':
                 AC.split_data()
                 AC.compare_proprtions()
             elif user_input == 4:
-                # create object of 
+                # create object of DiscoverAndVisulize
                 DAV = DiscoverAndVisulize(folder='housing')
                 DAV.visulaize_data()
+                DAV.correlation()
         except ValueError:
             user_input = str(user_input)
             if user_input == 'exit':
