@@ -176,6 +176,10 @@ class DiscoverAndVisulize(AddCompare):
     def correlation(self):
         strat_train_set, strat_test_set = self.remove_column()
         housing = strat_train_set.copy()
+        # add three columns in our current dataset 'housing'
+        housing["rooms_per_household"] = housing["total_rooms"]/housing["households"]
+        housing["bedrooms_per_room"] = housing["total_bedrooms"]/housing["total_rooms"]
+        housing["population_per_household"]=housing["population"]/housing["households"]
         corr_matrix = housing.corr() # use corr() for creating a metrix of correlation for all columns
         print(corr_matrix["median_house_value"].sort_values(ascending=False))
         attributes = ["median_house_value", "median_income", "total_rooms",
