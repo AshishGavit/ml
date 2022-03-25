@@ -7,6 +7,9 @@ from pandas.plotting import scatter_matrix
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 mpl.rc('axes', labelsize=14)
 mpl.rc('xtick', labelsize=12)
@@ -187,3 +190,64 @@ class DiscoverAndVisulize(AddCompare):
         scatter_matrix(housing[attributes], figsize=(10, 7)) # visulize correlation using scatter_matrix
         SaveDataAndImage.save_fig(self,"scatter_matrix_plot") # call SaveDataAndImage.save_fig() method to save as img.
         plt.show()
+
+class DataPreparation(DiscoverAndVisulize):
+    def __init__(self, folder):
+        DiscoverAndVisulize.__init__(self, folder)
+
+    def null_value(self):
+        strat_train_set, strat_test_set = self.remove_column()
+        housing = strat_train_set.drop("median_house_value", axis=1) # add all columns but drop median_house_value for training purpose
+        housing_labels = strat_train_set["median_house_value"].copy() # copy only median_housing_value column
+        # find all rows which has null value from all columns in dataset
+        sample_incomplete_rows = housing[housing.isnull().any(axis=1)].head()
+        print(sample_incomplete_rows)
+        # replace the null rows with median() value
+        median = housing["total_bedrooms"].median() # get median of total_bedrooms columns
+        sample_incomplete_rows["total_bedrooms"].fillna(median, inplace=True) # use fillna() to replace null value with median
+        print(sample_incomplete_rows)
+        return strat_train_set, strat_test_set
+
+    def null_value_with_imputer(self):
+        strat_train_set, strat_test_set = self.null_value()
+        housing = strat_train_set.drop("median_house_value", axis=1) # add all columns but drop median_house_value for training purpose
+        housing_labels = strat_train_set["median_house_value"].copy() # copy only median_housing_value column
+        
+        # Remove the text attribute because SimpleImputer can only calculated on numerical attributes
+        housing_num = housing.drop('ocean_proximity', axis=1)
+        # housing_num = housing.select_dtypes(include=[np.number])
+        
+        # create instance of SimpleImputer with median value
+        imputer = SimpleImputer(strategy='median')
+        imputer.fit(housing_num) # use fit() method to fit imputer instance to all columns of housing_num
+        print(imputer.statistics_) # use statistics_ attribut of SimpleImputer() method to get median house value of all columns
+
+        print(housing_num.median().values) # Check median housing all columns
+
+        #Transform the training set:
+        X = imputer.transform(housing_num) # The result of transform() is a plain Numpy array
+        housing_tr = pd.DataFrame(X, columns=housing_num.columns, index=housing.index) # put X (plain Numpy array) into the dataframe
+
+        print(housing_tr)
+    
+    def convert_categorical_feature(self):
+        strat_train_set, strat_test_set = self.null_value()
+        housing = strat_train_set.drop("median_house_value", axis=1) # add all columns but drop median_house_value for training purpose
+        housing_labels = strat_train_set["median_house_value"].copy() # copy only median_housing_value column
+
+        housing_cat = housing[['ocean_proximity']] # get 'ocean_proximit' column
+        housing_cat.head(10)
+
+        # use OrdianlEncoder() method to convert categorial feature to 0 and 1
+        ordinal_encoder = OrdinalEncoder() # create an object/instance of OrdinalEncoder() method
+        housing_cat_encoded = ordinal_encoder.fit_transform(housing_cat) # use fit_transform() method to first fit and then transform the entire data
+        print(housing_cat_encoded[:10])
+
+        print(ordinal_encoder.categories_) # use OrdinalEndor Attribut categories_ to view the category
+
+        # OneHotEncoder() method convert categorial into sparse array. To disable sparse use sparse=False
+        cat_encoder = OneHotEncoder(sparse=False) # create an object/instance of OneHotEncoder() method
+        housing_cat_1hot = cat_encoder.fit_transform(housing_cat) # use fit_transform() method to first fit and then transform the entire data
+        print(housing_cat_1hot)
+        # By default, the OneHotEncoder class returns a sparse array, but we can convert it to a dense array if needed by calling the toarray() method:
+        # print(housing_cat_1hot.toarray())
