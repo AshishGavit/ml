@@ -3,7 +3,7 @@ from california_housing_price import *
 if __name__ == '__main__':
     loop = True
     while loop == True:
-        print('1 - Fetch & Extract Data \n2 - Read Data & Visualize \n3 - Add and Compare\n4 - Discove and Visualize')
+        print('1 - Fetch & Extract Data \n2 - Read Data & Visualize \n3 - Add and Compare\n4 - Discove and Visualize \n5 - Data Preparation')
 
         DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml/master/"
         HOUSING_URL = DOWNLOAD_ROOT + "datasets/housing/housing.tgz"
@@ -28,6 +28,11 @@ if __name__ == '__main__':
                 DAV = DiscoverAndVisulize(folder='housing')
                 DAV.visulaize_data()
                 DAV.correlation()
+            elif user_input == 5:
+                # create object of DataPreparation
+                DP = DataPreparation(folder='housing')
+                DP.null_value_with_imputer()
+                DP.convert_categorical_feature()
         except ValueError:
             user_input = str(user_input)
             if user_input == 'exit':
