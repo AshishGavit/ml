@@ -1,4 +1,3 @@
-from data_preparation import *
 
 if __name__ == '__main__':
     data_path = 'datasets\\housing\\'
@@ -35,8 +34,11 @@ if __name__ == '__main__':
                 da.visulaize_data(img_path)
                 da.correlation(img_path)
             elif user_input == 5:
-                dp = DataPreparation()
-                dp.null_value(data_path)
+                from data_preparation import DataPreparation
+                dp = DataPreparation(data_path)
+                dp.null_value()
+                dp.null_value_with_imputer()
+                dp.convert_categorical_feature()
         except ValueError:
             user_input = str(user_input)
             if user_input == 'exit':
