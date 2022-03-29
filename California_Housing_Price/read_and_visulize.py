@@ -100,13 +100,15 @@ class CompareProprtions(ReadData):
 # this class discovers and visulize correlation between columns
 # use StratifiedShuffleSplit split model to split the data and use that data to discover and visulize
 class DiscoverAndVisulize(CompareProprtions):
-    def __init__(self):
+    def __init__(self, data_path):
         CompareProprtions.__init__(self)
-    
-    # Plot a Scatterplot and save it as 'housing_prices_scatterplot.png'
-    def visulaize_data(self, data_path, img_path):
         strat_train_set, strat_test_set = self.remove_column(data_path)
         housing = strat_train_set.copy()
+        self.housing = housing
+    
+    # Plot a Scatterplot and save it as 'housing_prices_scatterplot.png'
+    def visulaize_data(self, img_path):
+        housing = self.housing
         housing.plot(kind="scatter", x="longitude", y="latitude", alpha=0.4,
             s=housing["population"]/100, label="population", figsize=(10,7),
             c="median_house_value", cmap=plt.get_cmap("jet"), colorbar=True,
@@ -116,9 +118,8 @@ class DiscoverAndVisulize(CompareProprtions):
         plt.show()
     
     # display the correlation using pandas
-    def correlation(self, data_path, img_path):
-        strat_train_set, strat_test_set = self.remove_column(data_path)
-        housing = strat_train_set.copy()
+    def correlation(self, img_path):
+        housing = self.housing
         # add three columns in our current dataset 'housing'
         housing["rooms_per_household"] = housing["total_rooms"]/housing["households"]
         housing["bedrooms_per_room"] = housing["total_bedrooms"]/housing["total_rooms"]
@@ -158,9 +159,9 @@ if __name__ == '__main__':
                 cp = CompareProprtions()
                 cp.compare_proprtions(data_path)
             elif user_input == 4:
-                da = DiscoverAndVisulize()
-                da.visulaize_data(data_path, img_path)
-                da.correlation(data_path, img_path)
+                da = DiscoverAndVisulize(data_path)
+                da.visulaize_data(img_path)
+                da.correlation(img_path)
         except ValueError:
             user_input = str(user_input)
             if user_input == 'exit':
