@@ -31,9 +31,9 @@ if __name__ == '__main__':
                 cp.compare_proprtions(data_path)
             elif user_input == 4:
                 from read_and_visulize import DiscoverAndVisulize
-                da = DiscoverAndVisulize()
-                da.visulaize_data(data_path, img_path)
-                da.correlation(data_path, img_path)
+                da = DiscoverAndVisulize(data_path)
+                da.visulaize_data(img_path)
+                da.correlation(img_path)
             elif user_input == 5:
                 dp = DataPreparation()
                 dp.null_value(data_path)
